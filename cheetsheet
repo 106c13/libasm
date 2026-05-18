@@ -1,0 +1,239 @@
+Cheetsheet for x86_64 LINUX ABI
+
+FUNCTION ARGUMENTS
+────────────────────────────────────────────────────────────────────────
+
+arg1    → rdi
+arg2    → rsi
+arg3    → rdx
+arg4    → rcx
+arg5    → r8
+arg6    → r9
+
+return  → rax
+
+
+Example:
+
+    write(fd, buf, size)
+
+    rdi = fd
+    rsi = buf
+    rdx = size
+
+
+
+SYSCALL ARGUMENTS
+────────────────────────────────────────────────────────────────────────
+
+rax     → syscall number
+
+arg1    → rdi
+arg2    → rsi
+arg3    → rdx
+arg4    → r10
+arg5    → r8
+arg6    → r9
+
+return  → rax
+
+
+Example:
+
+    write(1, "hi", 2)
+
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, msg
+    mov rdx, 2
+    syscall
+
+
+
+COMMON SYSCALL NUMBERS
+────────────────────────────────────────────────────────────────────────
+
+0       read
+1       write
+2       open
+3       close
+60      exit
+
+
+
+GENERAL PURPOSE REGISTERS
+────────────────────────────────────────────────────────────────────────
+
+rax     accumulator / return value
+rbx     preserved register
+rcx     counter
+rdx     data register
+rsi     source index
+rdi     destination index
+rbp     base pointer
+rsp     stack pointer
+
+r8-r15  extra general purpose registers
+
+
+
+CALLER SAVED REGISTERS
+────────────────────────────────────────────────────────────────────────
+
+rax
+rcx
+rdx
+rsi
+rdi
+r8
+r9
+r10
+r11
+
+caller must save them if needed
+
+
+
+CALLEE SAVED REGISTERS
+────────────────────────────────────────────────────────────────────────
+
+rbx
+rbp
+rsp
+r12
+r13
+r14
+r15
+
+function must restore them before ret
+
+
+
+REGISTER SIZES
+────────────────────────────────────────────────────────────────────────
+
+64-bit      32-bit      16-bit      8-bit
+
+rax         eax         ax          al
+rbx         ebx         bx          bl
+rcx         ecx         cx          cl
+rdx         edx         dx          dl
+
+rdi         edi         di          dil
+rsi         esi         si          sil
+
+rbp         ebp         bp          bpl
+rsp         esp         sp          spl
+
+
+
+MEMORY SIZES
+────────────────────────────────────────────────────────────────────────
+
+byte        1 byte      8 bits
+word        2 bytes     16 bits
+dword       4 bytes     32 bits
+qword       8 bytes     64 bits
+
+
+
+STACK
+────────────────────────────────────────────────────────────────────────
+
+stack grows downward
+
+push    → rsp decreases
+pop     → rsp increases
+
+
+Example:
+
+    push rax
+
+becomes:
+
+    sub rsp, 8
+    mov [rsp], rax
+
+
+
+FUNCTION PROLOGUE
+────────────────────────────────────────────────────────────────────────
+
+push rbp
+mov rbp, rsp
+
+FUNCTION EPILOGUE
+────────────────────────────────────────────────────────────────────────
+
+mov rsp, rbp
+pop rbp
+ret
+
+
+
+STRING LOOP EXAMPLE
+────────────────────────────────────────────────────────────────────────
+
+_loop:
+    cmp byte [rdi], 0
+    je  _end
+
+    inc rdi
+    jmp _loop
+
+
+
+IMPORTANT
+────────────────────────────────────────────────────────────────────────
+
+syscall destroys:
+
+    rcx
+    r11
+
+division uses:
+
+    rax
+    rdx
+
+mul stores result in:
+
+    rdx:rax
+
+errno on syscall error:
+
+    rax = -errno
+
+
+
+BUILD
+────────────────────────────────────────────────────────────────────────
+
+nasm -f elf64 file.asm -o file.o
+gcc main.c file.o -o prog
+
+or
+
+ld file.o -o prog
+
+
+
+TRUE PROGRAMMER NOTES
+────────────────────────────────────────────────────────────────────────
+
+lea     does address arithmetic
+mov     moves data
+xor rax, rax     faster zeroing idiom
+
+[rax]           dereference pointer
+rax             value inside register
+
+little endian:
+    lowest byte stored first
+
+Intel syntax:
+    destination, source
+
+
+"The machine is always honest." 
