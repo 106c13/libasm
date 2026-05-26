@@ -1,54 +1,91 @@
 section .text
+
 global ft_write
 global ft_strlen
 global ft_atoi_base
-global ft_fib
+global ft_strcmp
+global ft_strcpy
 
-ft_fib:
-    mov eax, 1
-	xor ebx, ebx
-	xor ecx, ecx
 
-.loop:
-    cmp ecx, edi
-    jne .continue
-	ret
+; ======================== FT_STRCPY =======================
 
-.continue:
-	mov edx, ebx
-	mov ebx, eax
-	add eax, edx
+ft_strcpy:
+    mov rax, rdi
 
-    inc ecx
-    jmp .loop
+.strcpy_loop:
+    mov dl, [rsi]
+    mov [rdi], dl
+
+    inc rdi
+    inc rsi
+
+    cmp dl, 0
+    jne .strcpy_loop
+
+    ret
+
+
+; ======================== FT_STRCMP =======================
+
+ft_strcmp:
+.strcmp_loop:
+    mov al, [rdi]
+    mov bl, [rsi]
+
+    cmp al, bl
+    jne .diff
+
+    cmp al, 0
+    je .equal
+
+    inc rdi
+    inc rsi
+    jmp .strcmp_loop
+
+.diff:
+    movzx eax, al
+    movzx ebx, bl
+    sub eax, ebx
+    ret
+
+.equal:
+    xor eax, eax
+    ret
+
 
 ; ======================== FT_WRITE ========================
+
 ft_write:
-	mov rax, 1
-	syscall
-	ret
+    mov rax, 1
+    syscall
+    ret
 
 
-; ======================== FT_STRLEN ======================= 
+; ======================== FT_STRLEN =======================
+
 ft_strlen:
-    mov rax, 0
+    xor rax, rax
 
-_ft_strlen_loop:
+.strlen_loop:
     cmp byte [rdi], 0
-    je _return
+    je .done
 
     inc rax
     inc rdi
-    jmp _ft_strlen_loop
+    jmp .strlen_loop
+
+.done:
+    ret
+
 
 ; ==================== FT_ATOI_BASE ========================
+
 ft_atoi_base:
-	mov rax, 0
+    xor rax, rax
 
-_ft_atoi_base_loop:
-	cmp byte [rdi], 0
-	je _return
-
+.atoi_loop:
+    cmp byte [rdi], 0
+    je .done
 
     movzx rcx, byte [rdi]
     sub rcx, '0'
@@ -57,7 +94,7 @@ _ft_atoi_base_loop:
     add rax, rcx
 
     inc rdi
-	jmp _ft_atoi_base_loop
+    jmp .atoi_loop
 
-_return:
+.done:
     ret
